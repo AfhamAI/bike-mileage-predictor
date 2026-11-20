@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Motorcycle Mileage Predictor</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<!-- ANIMATED GLASS BACKGROUND (decorative only) -->
+<div class="bg" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="grid-lines"></div>
+    <div class="road"></div>
+</div>
+
+<main class="container">
+
+    <header class="header">
+        <div class="eyebrow">MACHINE LEARNING PROJECT</div>
+
+        <h1>Motorcycle Mileage Predictor</h1>
+
+        <p>
+            Select your motorcycle, describe your journey,
+            and estimate its fuel efficiency.
+        </p>
+    </header>
+
+
+    {% if prediction is not none %}
+
+    <section class="result-card">
+
+        <div class="result-label">PREDICTED MILEAGE</div>
+
+        <div class="result-value">
+            <span class="num" id="result-num">{{ prediction }}</span> <span class="unit">KMPL</span>
+        </div>
+
+        <p>Estimated kilometres per litre</p>
+
+        {% if input_summary %}
+        <div class="result-summary">
+            {{ input_summary.brand }}
+            {{ input_summary.model }}
+            ({{ input_summary.year }})
+            · {{ input_summary.trip_distance }} KM trip
+        </div>
+        {% endif %}
+
+    </section>
+
+    {% endif %}
+
+
+    {% if error %}
+    <div class="error-message">
+        <strong>Prediction error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+
+    <form method="POST" action="/" id="prediction-form">
+
+        <!-- MOTORCYCLE SELECTION -->
+
+        <section class="form-section">
+
+            <div class="section-heading">
+                <h2>1. Select Your Motorcycle</h2>
+                <p>
+                    We will automatically retrieve the motorcycle
+                    specifications from the project dataset.
+                </p>
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label for="brand">Brand</label>
+
+                    <select name="brand" id="brand" required>
+
+                        {% for brand in brands %}
+                        <option
+                            value="{{ brand }}"
+                            {% if brand == selected_brand %}selected{% endif %}
+                        >
+                            {{ brand }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="model">Motorcycle Model</label>
+
+                    <select name="model" id="model" required>
+
+                        {% for motorcycle in models %}
+                        <option
+                            value="{{ motorcycle }}"
+                            {% if motorcycle == selected_model %}selected{% endif %}
+                        >
+                            {{ motorcycle }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="model_year">Model Year / Variant</label>
+
+                    <select name="model_year" id="model_year" required>
+
+                        {% for year in years %}
+                        <option
+                            value="{{ year }}"
+                            {% if year == selected_year %}selected{% endif %}
+                        >
+                            {{ year }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- AUTOMATIC SPECIFICATIONS -->
+
+            <div class="spec-panel">
+
+                <div class="spec-heading">
+                    <h3>Motorcycle Specifications</h3>
+                    <span id="spec-status">Loading specifications...</span>
+                </div>
+
+                <div class="spec-grid">
+
+                    <div class="spec-item">
+                        <span>Segment</span>
+                        <strong id="spec-segment">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Engine Capacity</span>
+                        <strong id="spec-engine_cc">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Maximum Power</span>
+                        <strong id="spec-max_power_bhp">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Kerb Weight</span>
+                        <strong id="spec-kerb_weight_kg">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Fuel Tank</span>
+                        <strong id="spec-fuel_tank_l">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Transmission</span>
+                        <strong id="spec-transmission">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Gears</span>
+                        <strong id="spec-gears">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>Cooling</span>
+                        <strong id="spec-cooling">—</strong>
+                    </div>
+
+                    <div class="spec-item">
+                        <span>ABS</span>
+                        <strong id="spec-abs_type">—</strong>
+                    </div>
+
+                </div>
+
+                <p class="spec-note">
+                    Specifications are retrieved from the project's
+                    motorcycle dataset. Missing values may be handled
+                    by the trained model's preprocessing pipeline.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- USER INPUT SECTIONS -->
+
+        {% for section in sections %}
+
+        {% if section.optional %}
+
+        <details class="form-section advanced-section">
+
+            <summary>
+                <div>
+                    <h2>{{ section.title }}</h2>
+                    <p>{{ section.description }}</p>
+                </div>
+
+                <span class="optional-tag">Optional</span>
+            </summary>
+
+            <div class="form-grid advanced-grid">
+
+                {% for field in section.fields %}
+
+                <div class="form-group">
+
+                    <label for="{{ field.name }}">
+                        {{ field.label }}
+                    </label>
+
+                    {% if field.type == "select" %}
+
+                    <select
+                        name="{{ field.name }}"
+                        id="{{ field.name }}"
+                    >
+
+                        {% if field.options is mapping %}
+
+                            {% for option_value, option_label in field.options.items() %}
+
+                            <option
+                                value="{{ option_value }}"
+                                {% if field.value|string == option_value|string %}selected{% endif %}
+                            >
+                                {{ option_label }}
+                            </option>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            {% for option in field.options %}
+
+                            <option
+                                value="{{ option }}"
+                                {% if field.value|string == option|string %}selected{% endif %}
+                            >
+                                {{ option }}
+                            </option>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    </select>
+
+                    {% else %}
+
+                    <input
+                        type="number"
+                        name="{{ field.name }}"
+                        id="{{ field.name }}"
+                        value="{{ field.value }}"
+                        step="{{ field.step }}"
+                    >
+
+                    {% endif %}
+
+                    <small>
+                        Default: {{ field.default }}
+                    </small>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </details>
+
+        {% else %}
+
+        <section class="form-section">
+
+            <div class="section-heading">
+                <h2>{{ section.title }}</h2>
+                <p>{{ section.description }}</p>
+            </div>
+
+            <div class="form-grid">
+
+                {% for field in section.fields %}
+
+                <div class="form-group">
+
+                    <label for="{{ field.name }}">
+                        {{ field.label }}
+                    </label>
+
+                    {% if field.type == "select" %}
+
+                    <select
+                        name="{{ field.name }}"
+                        id="{{ field.name }}"
+                        {% if field.required %}required{% endif %}
+                    >
+
+                        {% if field.options is mapping %}
+
+                            {% for option_value, option_label in field.options.items() %}
+
+                            <option
+                                value="{{ option_value }}"
+                                {% if field.value|string == option_value|string %}selected{% endif %}
+                            >
+                                {{ option_label }}
+                            </option>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            {% for option in field.options %}
+
+                            <option
+                                value="{{ option }}"
+                                {% if field.value|string == option|string %}selected{% endif %}
+                            >
+                                {{ option }}
+                            </option>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    </select>
+
+                    {% else %}
+
+                    <input
+                        type="number"
+                        name="{{ field.name }}"
+                        id="{{ field.name }}"
+                        value="{{ field.value }}"
+                        step="{{ field.step }}"
+                        {% if field.required %}required{% endif %}
+                    >
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+        {% endfor %}
+
+
+        <button
+            type="submit"
+            class="predict-button"
+            id="predict-button"
+        >
+            Predict Mileage
+        </button>
+
+    </form>
+
+
+    <footer class="footer">
+        Motorcycle Mileage Prediction · Machine Learning
+    </footer>
+
+</main>
+
+
+<!-- SUBMIT OVERLAY (decorative) -->
+<div class="ride-overlay" id="ride-overlay" aria-hidden="true">
+    <div class="ride-road"></div>
+    <div class="ride-bike">
+        <svg viewBox="0 0 100 60" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <g class="wheel-spin" style="--spin:0.35s"><circle cx="20" cy="42" r="13"/><path d="M20 29V55M7 42H33M11 33L29 51M29 33L11 51" stroke-width="1.2" opacity=".8"/></g>
+            <g class="wheel-spin" style="--spin:0.35s"><circle cx="80" cy="42" r="13"/><path d="M80 29V55M67 42H93M71 33L89 51M89 33L71 51" stroke-width="1.2" opacity=".8"/></g>
+            <path d="M20 42 L36 30 L56 30 L68 22 L80 42"/>
+            <path d="M40 26 Q50 18 62 24 L58 30 H40Z" fill="currentColor" stroke="none" opacity=".9"/>
+            <path d="M24 28 H38" stroke-width="4"/>
+            <path d="M66 20 L74 16"/>
+            <rect x="40" y="33" width="14" height="9" rx="2" fill="currentColor" stroke="none"/>
+            <path d="M38 42 L14 46" opacity=".7" stroke-width="2"/>
+        </svg>
+    </div>
+    <p>CALCULATING MILEAGE…</p>
+</div>
+
+
+<!-- BIKE CURSOR (decorative; only enabled on mouse devices) -->
+<div id="bike-cursor" aria-hidden="true">
+    <div class="bike-flip">
+        <div class="bike-body">
+            <svg viewBox="0 0 100 60" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <g class="wheel-spin"><circle cx="20" cy="42" r="13"/><path d="M20 29V55M7 42H33M11 33L29 51M29 33L11 51" stroke-width="1.2" opacity=".8"/></g>
+                <g class="wheel-spin"><circle cx="80" cy="42" r="13"/><path d="M80 29V55M67 42H93M71 33L89 51M89 33L71 51" stroke-width="1.2" opacity=".8"/></g>
+                <path d="M20 42 L36 30 L56 30 L68 22 L80 42"/>
+                <path d="M40 26 Q50 18 62 24 L58 30 H40Z" fill="#4f8cff" stroke="none"/>
+                <path d="M24 28 H38" stroke-width="4"/>
+                <path d="M66 20 L74 16"/>
+                <rect x="40" y="33" width="14" height="9" rx="2" fill="currentColor" stroke="none"/>
+                <path d="M38 42 L14 46" opacity=".7" stroke-width="2"/>
+                <circle cx="76" cy="20" r="3" fill="#22d3ee" stroke="none"/>
+            </svg>
+        </div>
+    </div>
+</div>
+<div id="bike-dot" aria-hidden="true"></div>
+
+
+<script>
+
+    // ------------------------------------------------
+    // ELEMENTS
+    // ------------------------------------------------
+
+    const brandSelect = document.getElementById("brand");
+    const modelSelect = document.getElementById("model");
+    const yearSelect = document.getElementById("model_year");
+
+    const specStatus = document.getElementById("spec-status");
+
+
+    // ------------------------------------------------
+    // DISPLAY AUTOMATIC MOTORCYCLE SPECIFICATIONS
+    // ------------------------------------------------
+
+    function displaySpecifications(specifications) {
+
+        const displayFields = [
+            "segment",
+            "engine_cc",
+            "max_power_bhp",
+            "kerb_weight_kg",
+            "fuel_tank_l",
+            "transmission",
+            "gears",
+            "cooling",
+            "abs_type"
+        ];
+
+        displayFields.forEach(function(field) {
+
+            const element = document.getElementById("spec-" + field);
+
+            const value = specifications[field];
+
+            if (value === null || value === undefined || value === "") {
+                element.textContent = "Not available";
+            } else {
+                element.textContent = value;
+            }
+
+        });
+
+    }
+
+
+    function clearSpecifications() {
+
+        const elements = document.querySelectorAll(
+            ".spec-item strong"
+        );
+
+        elements.forEach(function(element) {
+            element.textContent = "—";
+        });
+
+    }
+
+
+    // ------------------------------------------------
+    // LOAD AVAILABLE MOTORCYCLE MODELS
+    // ------------------------------------------------
+
+    async function loadModels(keepCurrentModel = false) {
+
+        const brand = brandSelect.value;
+
+        modelSelect.disabled = true;
+        yearSelect.disabled = true;
+
+        specStatus.textContent = "Loading motorcycle models...";
+
+        clearSpecifications();
+
+        try {
+
+            const response = await fetch(
+                `/api/models?brand=${encodeURIComponent(brand)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Could not load models.");
+            }
+
+            const previousModel = keepCurrentModel
+                ? modelSelect.value
+                : "";
+
+            modelSelect.innerHTML = "";
+
+            data.models.forEach(function(motorcycle) {
+
+                const option = document.createElement("option");
+
+                option.value = motorcycle;
+                option.textContent = motorcycle;
+
+                modelSelect.appendChild(option);
+
+            });
+
+            if (data.models.length === 0) {
+
+                modelSelect.disabled = true;
+                yearSelect.innerHTML = "";
+                specStatus.textContent = "No models found.";
+
+                return;
+            }
+
+            if (data.models.includes(previousModel)) {
+                modelSelect.value = previousModel;
+            } else {
+                modelSelect.selectedIndex = 0;
+            }
+
+            modelSelect.disabled = false;
+
+            await loadSpecifications(false);
+
+        } catch (error) {
+
+            specStatus.textContent = error.message;
+
+            modelSelect.disabled = true;
+            yearSelect.disabled = true;
+
+        }
+
+    }
+
+
+    // ------------------------------------------------
+    // LOAD MODEL YEARS AND SPECIFICATIONS
+    // ------------------------------------------------
+
+    async function loadSpecifications(preserveYear = true) {
+
+        const brand = brandSelect.value;
+        const motorcycle = modelSelect.value;
+
+        if (!brand || !motorcycle) {
+            return;
+        }
+
+        const previousYear = preserveYear
+            ? yearSelect.value
+            : "";
+
+        yearSelect.disabled = true;
+
+        specStatus.textContent = "Loading specifications...";
+
+        clearSpecifications();
+
+        try {
+
+            const url =
+                `/api/motorcycle-specs?brand=${encodeURIComponent(brand)}` +
+                `&model=${encodeURIComponent(motorcycle)}`;
+
+            const response = await fetch(url);
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Specifications not found.");
+            }
+
+            yearSelect.innerHTML = "";
+
+            data.years.forEach(function(year) {
+
+                const option = document.createElement("option");
+
+                option.value = year;
+                option.textContent = year;
+
+                yearSelect.appendChild(option);
+
+            });
+
+            if (data.years.includes(Number(previousYear))) {
+                yearSelect.value = previousYear;
+            } else {
+                yearSelect.value = data.selected_year;
+            }
+
+            yearSelect.disabled = false;
+
+            await loadSelectedYearSpecifications();
+
+        } catch (error) {
+
+            specStatus.textContent = error.message;
+
+            yearSelect.disabled = true;
+
+        }
+
+    }
+
+
+    // ------------------------------------------------
+    // LOAD SPECIFICATIONS FOR SELECTED YEAR
+    // ------------------------------------------------
+
+    async function loadSelectedYearSpecifications() {
+
+        const brand = brandSelect.value;
+        const motorcycle = modelSelect.value;
+        const year = yearSelect.value;
+
+        if (!brand || !motorcycle || !year) {
+            return;
+        }
+
+        specStatus.textContent = "Loading specifications...";
+
+        try {
+
+            const url =
+                `/api/motorcycle-specs?brand=${encodeURIComponent(brand)}` +
+                `&model=${encodeURIComponent(motorcycle)}` +
+                `&year=${encodeURIComponent(year)}`;
+
+            const response = await fetch(url);
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Specifications not found.");
+            }
+
+            displaySpecifications(data.specifications);
+
+            specStatus.textContent =
+                `Specifications loaded for ${data.selected_year}`;
+
+        } catch (error) {
+
+            specStatus.textContent = error.message;
+
+            clearSpecifications();
+
+        }
+
+    }
+
+
+    // ------------------------------------------------
+    // EVENT LISTENERS
+    // ------------------------------------------------
+
+    brandSelect.addEventListener("change", function() {
+        loadModels(false);
+    });
+
+    modelSelect.addEventListener("change", function() {
+        loadSpecifications(false);
+    });
+
+    yearSelect.addEventListener("change", function() {
+        loadSelectedYearSpecifications();
+    });
+
+
+    // ------------------------------------------------
+    // INITIALIZE
+    // ------------------------------------------------
+
+    loadModels(true);
+
+
+    // ------------------------------------------------
+    // SUBMIT BUTTON
+    // ------------------------------------------------
+
+    document.getElementById("prediction-form").addEventListener(
+        "submit",
+        function() {
+
+            const button = document.getElementById("predict-button");
+
+            button.disabled = true;
+            button.textContent = "Predicting...";
+
+        }
+    );
+
+</script>
+
+
+<!-- ================================================
+     VISUAL EFFECTS ONLY (no effect on app logic)
+================================================ -->
+<script>
+(function () {
+
+    "use strict";
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+
+    // ---------- Glass spotlight following the mouse ----------
+    document.querySelectorAll(".form-section, .result-card, .spec-panel").forEach(function (card) {
+        card.addEventListener("mousemove", function (e) {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+            card.style.setProperty("--my", (e.clientY - r.top) + "px");
+        });
+    });
+
+
+    // ---------- Flash animation when a spec value changes ----------
+    if ("MutationObserver" in window) {
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+                const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+                if (!el || el.tagName !== "STRONG") return;
+                el.classList.remove("flash");
+                void el.offsetWidth;
+                el.classList.add("flash");
+            });
+        });
+        document.querySelectorAll(".spec-item strong").forEach(function (el) {
+            observer.observe(el, { childList: true, characterData: true, subtree: true });
+        });
+    }
+
+
+    // ---------- Count-up for the predicted mileage ----------
+    const num = document.getElementById("result-num");
+    if (num && !reduceMotion) {
+        const finalText = num.textContent.trim();
+        const target = parseFloat(finalText);
+        if (isFinite(target)) {
+            const decimals = (finalText.split(".")[1] || "").length;
+            const duration = 1400;
+            const start = performance.now();
+            (function tick(now) {
+                const t = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - t, 4);
+                num.textContent = (target * eased).toFixed(decimals);
+                if (t < 1) {
+                    requestAnimationFrame(tick);
+                } else {
+                    num.textContent = finalText;
+                }
+            })(start);
+        }
+    }
+
+
+    // ---------- Button ripple ----------
+    const predictButton = document.getElementById("predict-button");
+    predictButton.addEventListener("click", function (e) {
+        const r = predictButton.getBoundingClientRect();
+        const size = Math.max(r.width, r.height) / 4;
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+        ripple.style.width = ripple.style.height = size + "px";
+        ripple.style.left = (e.clientX - r.left - size / 2) + "px";
+        ripple.style.top = (e.clientY - r.top - size / 2) + "px";
+        predictButton.appendChild(ripple);
+        setTimeout(function () { ripple.remove(); }, 650);
+    });
+
+
+    // ---------- Riding-bike overlay on submit ----------
+    const overlay = document.getElementById("ride-overlay");
+    document.getElementById("prediction-form").addEventListener("submit", function () {
+        overlay.classList.add("show");
+    });
+    window.addEventListener("pageshow", function (e) {
+        if (e.persisted) overlay.classList.remove("show");
+    });
+
+
+    // ---------- Bike cursor ----------
+    if (!finePointer) return;
+
+    const bike = document.getElementById("bike-cursor");
+    const flip = bike.querySelector(".bike-flip");
+    const dot = document.getElementById("bike-dot");
+
+    document.documentElement.classList.add("has-bike");
+
+    let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
+    let x = tx, y = ty;
+    let facing = 1;
+    let started = false;
+    let lastSmoke = 0;
+
+    window.addEventListener("mousemove", function (e) {
+        tx = e.clientX;
+        ty = e.clientY;
+        if (!started) {
+            x = tx; y = ty;
+            started = true;
+            bike.classList.add("visible");
+            dot.classList.add("visible");
+        }
+        dot.style.transform = "translate(" + tx + "px," + ty + "px)";
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", function () {
+        bike.classList.remove("visible");
+        dot.classList.remove("visible");
+    });
+    document.addEventListener("mouseenter", function () {
+        if (started) {
+            bike.classList.add("visible");
+            dot.classList.add("visible");
+        }
+    });
+
+    window.addEventListener("mousedown", function () {
+        bike.classList.add("wheelie");
+    });
+    window.addEventListener("mouseup", function () {
+        setTimeout(function () { bike.classList.remove("wheelie"); }, 250);
+    });
+
+    function spawnSmoke(px, py, dir) {
+        const s = document.createElement("div");
+        s.className = "smoke";
+        s.style.left = px + "px";
+        s.style.top = py + "px";
+        s.style.setProperty("--dx", (-dir * (14 + Math.random() * 18)) + "px");
+        s.style.setProperty("--dy", (-(14 + Math.random() * 16)) + "px");
+        document.body.appendChild(s);
+        setTimeout(function () { s.remove(); }, 950);
+    }
+
+    function frame(now) {
+        const dx = tx - x;
+        const dy = ty - y;
+
+        x += dx * 0.16;
+        y += dy * 0.16;
+
+        const vx = dx * 0.16;
+        const vy = dy * 0.16;
+        const speed = Math.hypot(vx, vy);
+
+        if (vx > 0.6) facing = 1;
+        else if (vx < -0.6) facing = -1;
+
+        const tilt = Math.max(-18, Math.min(18, vy * 1.4));
+
+        bike.style.transform = "translate(" + x + "px," + y + "px)";
+        flip.style.transform = "scaleX(" + facing + ") rotate(" + tilt + "deg)";
+
+        const spin = Math.max(0.12, 3 / (1 + speed * 0.35));
+        bike.style.setProperty("--spin", spin.toFixed(2) + "s");
+
+        if (!reduceMotion && speed > 5 && now - lastSmoke > 60) {
+            lastSmoke = now;
+            spawnSmoke(x - facing * 30, y + 8, facing);
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+
+})();
+</script>
+
+</body>
+</html>
