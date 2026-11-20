@@ -1,167 +1,137 @@
-Motorcycle Mileage Prediction
+<div align="center">
 
-A Machine Learning project that predicts motorcycle fuel efficiency (KM/L) using motorcycle specifications, riding behaviour, road conditions, maintenance information, and trip details.
+# 🏍️ Motorcycle Mileage Prediction
 
-Project Overview
+**Predict motorcycle fuel efficiency (KM/L) from specs, riding behaviour, road conditions, maintenance and trip details.**
 
-The objective of this project is to develop a regression-based Machine Learning model that estimates the mileage of a motorcycle based on multiple influencing factors.
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
+![Scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikit-learn&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-Web%20App-000000?logo=flask&logoColor=white)
+![R² Score](https://img.shields.io/badge/R%C2%B2-0.9652-brightgreen)
 
-The trained model is integrated into a Flask web application where users can select their motorcycle, provide trip-related information, and receive a predicted mileage.
+</div>
 
-Features
+---
 
-Motorcycle brand, model, and year selection
+## 📖 Overview
 
-Automatic retrieval of motorcycle specifications from the dataset
+This project builds a regression-based Machine Learning model that estimates a motorcycle's mileage from multiple influencing factors.
 
-Trip-based mileage prediction
+The trained model is integrated into a **Flask web app** where users select their motorcycle, enter trip details, and get a predicted mileage instantly.
 
-Data preprocessing and feature engineering
+## ✨ Features
 
-Multiple Machine Learning model comparisons
+- 🏷️ Motorcycle brand, model and year selection
+- ⚙️ Automatic retrieval of motorcycle specs from the dataset
+- 🛣️ Trip-based mileage prediction
+- 🧹 Data preprocessing and feature engineering
+- 📊 Comparison of multiple ML models
+- 🎯 Hyperparameter tuning
+- 📦 Complete saved prediction pipeline
+- 🌐 Flask-based web interface
 
-Hyperparameter tuning
+## 🛠️ Tech Stack
 
-Complete saved prediction pipeline
+| Category | Tools |
+|---|---|
+| **Language** | Python |
+| **Data & ML** | Pandas, NumPy, Scikit-learn, Joblib |
+| **Visualization** | Matplotlib, Seaborn |
+| **Web App** | Flask, HTML, CSS, JavaScript |
 
-Flask-based web interface
+## 🔄 Machine Learning Workflow
 
-Technologies Used
+1. Data loading and inspection
+2. Data cleaning
+3. Exploratory Data Analysis (EDA)
+4. Feature engineering
+5. Data preprocessing
+6. Model training and comparison
+7. Hyperparameter tuning
+8. Model evaluation
+9. Pipeline creation and saving
+10. Flask application integration
 
-Python
+## 🤖 Models Compared
 
-Pandas
+- Linear Regression
+- Decision Tree Regressor
+- Random Forest Regressor
+- Gradient Boosting Regressor ✅ *(selected)*
 
-NumPy
+## 📈 Final Model Performance
 
-Matplotlib
+The tuned **Gradient Boosting Regressor** achieved these results on the test set:
 
-Seaborn
+| Metric | Score |
+|---|---|
+| MAE | 1.4692 |
+| MSE | 4.2543 |
+| RMSE | 2.0626 |
+| **R² Score** | **0.9652** |
 
-Scikit-learn
+The final pipeline is saved at `artifacts/final_mileage_pipeline.joblib`.
 
-Flask
+## 📁 Project Structure
 
-Joblib
+```text
+bike-mileage-predictor/
+├── artifacts/
+│   └── final_mileage_pipeline.joblib
+├── app.py
+├── requirements.txt
+└── README.md
+```
 
-HTML
+> Replace this with your actual directory tree (run `tree` in the project folder).
 
-CSS
+## 🚀 Installation & Setup
 
-JavaScript
+**1. Clone the repository**
 
-Machine Learning Workflow
+```bash
+git clone https://github.com/AfhamAI/bike-mileage-predictor.git
+cd bike-mileage-predictor
+```
 
-Data loading and inspection
+**2. Install dependencies**
 
-Data cleaning
-
-Exploratory Data Analysis (EDA)
-
-Feature engineering
-
-Data preprocessing
-
-Model training and comparison
-
-Hyperparameter tuning
-
-Model evaluation
-
-Pipeline creation and saving
-
-Flask application integration
-
-Models Compared
-
-Linear Regression
-
-Decision Tree Regressor
-
-Random Forest Regressor
-
-Gradient Boosting Regressor
-
-Final Model Performance
-
-The tuned Gradient Boosting Regressor achieved the following results on the test dataset:
-
-Metric
-
-Score
-
-MAE
-
-1.4692
-
-MSE
-
-4.2543
-
-RMSE
-
-2.0626
-
-R² Score
-
-0.9652
-
-The final model pipeline is saved at:
-
-artifacts/final_mileage_pipeline.joblib
-
-Project Structure
-
-Add the final verified project directory tree here.
-
-Installation and Setup
-
-Clone the repository:
-
-git clone YOUR_GITHUB_REPOSITORY_URL
-
-Navigate to the project directory:
-
-cd motorcycle-mileage-prediction
-
-Install dependencies:
-
+```bash
 pip install -r requirements.txt
+```
 
-Run the Flask application:
+**3. Run the Flask app**
 
+```bash
 python app.py
+```
 
-Open the local address displayed in your terminal.
+**4. Open the local address shown in your terminal** (usually `http://127.0.0.1:5000`).
 
-Screenshots
+## 🖼️ Screenshots
 
-Add screenshots of:
+<!-- Replace these with real images, e.g. ![EDA](screenshots/eda.png) -->
 
-Exploratory Data Analysis
+| Exploratory Data Analysis | Model Evaluation |
+|---|---|
+| *coming soon* | *coming soon* |
 
-Model evaluation
+| Prediction Interface | Example Result |
+|---|---|
+| *coming soon* | *coming soon* |
 
-Flask prediction interface
-
-Example prediction result
-
-Live Demo
+## 🌍 Live Demo
 
 Coming soon.
 
-Future Improvements
+## 🔮 Future Improvements
 
-Deploy the application online.
+- [ ] Deploy the application online
+- [ ] Improve accuracy with additional real-world data
+- [ ] Expand motorcycle specification coverage
+- [ ] Add more detailed prediction insights
 
-Improve prediction accuracy using additional real-world data.
+## 👤 Author
 
-Expand motorcycle specification coverage.
-
-Add more detailed prediction insights.
-
-Author
-
-Mohamed Afham
-
-GitHub: https://github.com/AfhamAI
+**Mohamed Afham**
+GitHub: [@AfhamAI](https://github.com/AfhamAI)****
